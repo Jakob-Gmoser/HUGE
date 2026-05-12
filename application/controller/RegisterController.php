@@ -14,19 +14,16 @@ class RegisterController extends Controller
     public function __construct()
     {
         parent::__construct();
+        Auth::checkAdminAuthentication();
     }
 
     /**
      * Register page
-     * Show the register form, but redirect to main-page if user is already logged-in
+     * Show the register form. Only admins can access this controller, so logged-in admins may use it.
      */
     public function index()
     {
-        if (LoginModel::isUserLoggedIn()) {
-            Redirect::home();
-        } else {
-            $this->View->render('register/index');
-        }
+        $this->View->render('register/index');
     }
 
     /**
