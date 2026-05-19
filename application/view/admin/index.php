@@ -13,13 +13,14 @@
             or suspend a user.
         </div>
         <div>
-            <table class="overview-table">
+            <table class="overview-table js-data-table display">
                 <thead>
                 <tr>
                     <td>Id</td>
                     <td>Avatar</td>
                     <td>Username</td>
                     <td>User's email</td>
+                    <td>Role</td>
                     <td>Activated ?</td>
                     <td>Link to user's profile</td>
                     <td>suspension Time in days</td>
@@ -28,6 +29,7 @@
                 </tr>
                 </thead>
                 <?php foreach ($this->users as $user) { ?>
+                    <?php $form_id = 'admin-user-form-' . $user->user_id; ?>
                     <tr class="<?= ($user->user_active == 0 ? 'inactive' : 'active'); ?>">
                         <td><?= $user->user_id; ?></td>
                         <td class="avatar">
@@ -37,18 +39,27 @@
                         </td>
                         <td><?= $user->user_name; ?></td>
                         <td><?= $user->user_email; ?></td>
+                        <td>
+                            <select name="userRole" form="<?= $form_id; ?>">
+                                <?php foreach ($this->roles as $role) { ?>
+                                    <option value="<?= $role->role_id; ?>" <?php if ($role->role_id == $user->user_account_type) { ?> selected <?php } ?>>
+                                        <?= $role->role_name; ?>
+                                    </option>
+                                <?php } ?>
+                            </select>
+                        </td>
                         <td><?= ($user->user_active == 0 ? 'No' : 'Yes'); ?></td>
                         <td>
                             <a href="<?= Config::get('URL') . 'profile/showProfile/' . $user->user_id; ?>">Profile</a>
                         </td>
-                        <form action="<?= config::get("URL"); ?>admin/actionAccountSettings" method="post">
-                            <td><input type="number" name="suspension" /></td>
-                            <td><input type="checkbox" name="softDelete" <?php if ($user->user_deleted) { ?> checked <?php } ?> /></td>
-                            <td>
+                        <td><input type="number" name="suspension" form="<?= $form_id; ?>" /></td>
+                        <td><input type="checkbox" name="softDelete" form="<?= $form_id; ?>" <?php if ($user->user_deleted) { ?> checked <?php } ?> /></td>
+                        <td>
+                            <form id="<?= $form_id; ?>" action="<?= config::get("URL"); ?>admin/actionAccountSettings" method="post">
                                 <input type="hidden" name="user_id" value="<?= $user->user_id; ?>" />
                                 <input type="submit" />
-                            </td>
-                        </form>
+                            </form>
+                        </td>
                     </tr>
                 <?php } ?>
             </table>

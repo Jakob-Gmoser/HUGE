@@ -11,13 +11,14 @@
             build things that use profile information of one or multiple/all users.
         </div>
         <div>
-            <table class="overview-table">
+            <table class="overview-table js-data-table display">
                 <thead>
                 <tr>
                     <td>Id</td>
                     <td>Avatar</td>
                     <td>Username</td>
                     <td>User's email</td>
+                    <td>Role</td>
                     <td>Activated ?</td>
                     <td>Link to user's profile</td>
                 </tr>
@@ -32,6 +33,7 @@
                         </td>
                         <td><?= $user->user_name; ?></td>
                         <td><?= $user->user_email; ?></td>
+                        <td><?= $user->role_name; ?></td>
                         <td><?= ($user->user_active == 0 ? 'No' : 'Yes'); ?></td>
                         <td>
                             <a href="<?= Config::get('URL') . 'profile/showProfile/' . $user->user_id; ?>">Profile</a>

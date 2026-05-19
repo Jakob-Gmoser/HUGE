@@ -8,6 +8,37 @@
 class UserRoleModel
 {
     /**
+     * Gets all available user roles.
+     *
+     * @return array
+     */
+    public static function getAllRoles()
+    {
+        $database = DatabaseFactory::getFactory()->getConnection();
+
+        $query = $database->prepare("SELECT role_id, role_name FROM user_roles ORDER BY role_id ASC");
+        $query->execute();
+
+        return $query->fetchAll();
+    }
+
+    /**
+     * Checks if a role exists.
+     *
+     * @param $type
+     * @return bool
+     */
+    public static function roleExists($type)
+    {
+        $database = DatabaseFactory::getFactory()->getConnection();
+
+        $query = $database->prepare("SELECT role_id FROM user_roles WHERE role_id = :role_id LIMIT 1");
+        $query->execute(array(':role_id' => $type));
+
+        return $query->rowCount() == 1;
+    }
+
+    /**
      * Upgrades / downgrades the user's account. Currently it's just the field user_account_type in the database that
      * can be 1 or 2 (maybe "basic" or "premium"). Put some more complex stuff in here, maybe a pay-process or whatever
      * you like.
