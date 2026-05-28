@@ -194,6 +194,7 @@ class RegistrationModel
                               ':user_provider_type' => 'DEFAULT'));
         $count =  $query->rowCount();
         if ($count == 1) {
+            ChatModel::addUserToDefaultGroup($database->lastInsertId());
             return true;
         }
 

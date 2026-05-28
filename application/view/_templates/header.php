@@ -9,6 +9,9 @@
     <!-- CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css" />
     <link rel="stylesheet" href="<?php echo Config::get('URL'); ?>css/style.css" />
+    <?php if (View::checkForActiveController($filename, "chat")) { ?>
+        <link rel="stylesheet" href="<?php echo Config::get('URL'); ?>css/chat.css?v=3" />
+    <?php } ?>
 </head>
 <body>
     <!-- wrapper, to center website -->
