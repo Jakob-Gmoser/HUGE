@@ -23,6 +23,7 @@ class DatabaseFactory
 {
     private static $factory;
     private $database;
+    private $mysqliDatabase;
 
     public static function getFactory()
     {
@@ -60,5 +61,33 @@ class DatabaseFactory
             }
         }
         return $this->database;
+    }
+
+    public function getMysqliConnection() {
+        if (!$this->mysqliDatabase) {
+            try {
+                $this->mysqliDatabase = new mysqli(
+                    Config::get('DB_HOST'),
+                    Config::get('DB_USER'),
+                    Config::get('DB_PASS'),
+                    Config::get('DB_NAME'),
+                    (int) Config::get('DB_PORT')
+                );
+
+                if ($this->mysqliDatabase->connect_errno) {
+                    echo 'Database connection can not be estabilished. Please try again later.' . '<br>';
+                    echo 'Error code: ' . $this->mysqliDatabase->connect_errno;
+                    exit;
+                }
+
+                $this->mysqliDatabase->set_charset(Config::get('DB_CHARSET'));
+            } catch (Exception $e) {
+                echo 'Database connection can not be estabilished. Please try again later.' . '<br>';
+                echo 'Error code: ' . $e->getCode();
+                exit;
+            }
+        }
+
+        return $this->mysqliDatabase;
     }
 }
