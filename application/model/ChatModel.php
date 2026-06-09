@@ -29,40 +29,10 @@ class ChatModel
         $chat->is_group = false;
         $chat->messages = array();
 
-        $sql = "SELECT cm.conversation_id FROM conversation_members cm
-                INNER JOIN conversations c ON c.ID = cm.conversation_id
-                WHERE cm.user_id IN (:user_id, :current_user_id)
-                    AND c.type = 0
-                GROUP BY cm.conversation_id
-                HAVING COUNT(*) = 2
-                LIMIT 1";
-        $query = $database->prepare($sql);
-        $query->execute(array(
+        $chat->messages = self::fetchAllProcedure($database, "CALL chat_get_direct_messages(:user_id, :current_user_id)", array(
             ':user_id' => $user_id,
             ':current_user_id' => Session::get('user_id')
         ));
-        $conversation = $query->fetch();
-
-        if ($conversation) {
-            $sql = "UPDATE messages
-                    SET is_read = 1
-                    WHERE conversation_id = :conversation_id
-                        AND sender_id != :current_user_id";
-            $query = $database->prepare($sql);
-            $query->execute(array(
-                ':conversation_id' => $conversation->conversation_id,
-                ':current_user_id' => Session::get('user_id')
-            ));
-
-            $sql = "SELECT m.ID, m.conversation_id, m.sender_id, m.message, m.is_read, u.user_name
-                    FROM messages m
-                    INNER JOIN users u ON u.user_id = m.sender_id
-                    WHERE m.conversation_id = :conversation_id
-                    ORDER BY m.ID ASC";
-            $query = $database->prepare($sql);
-            $query->execute(array(':conversation_id' => $conversation->conversation_id));
-            $chat->messages = $query->fetchAll();
-        }
 
         return $chat;
     }
@@ -73,31 +43,17 @@ class ChatModel
     public static function getDefaultGroupChat()
     {
         $database = DatabaseFactory::getFactory()->getConnection();
-        $conversation_id = self::getDefaultGroupConversationId();
+        $conversation = self::fetchProcedure($database, "CALL chat_get_default_group_id()");
 
-        $sql = "UPDATE messages
-                SET is_read = 1
-                WHERE conversation_id = :conversation_id
-                    AND sender_id != :current_user_id";
-        $query = $database->prepare($sql);
-        $query->execute(array(
-            ':conversation_id' => $conversation_id,
+        $messages = self::fetchAllProcedure($database, "CALL chat_get_default_group_messages(:current_user_id)", array(
             ':current_user_id' => Session::get('user_id')
         ));
-
-        $sql = "SELECT m.ID, m.conversation_id, m.sender_id, m.message, m.is_read, u.user_name
-                FROM messages m
-                INNER JOIN users u ON u.user_id = m.sender_id
-                WHERE m.conversation_id = :conversation_id
-                ORDER BY m.ID ASC";
-        $query = $database->prepare($sql);
-        $query->execute(array(':conversation_id' => $conversation_id));
 
         $chat = new stdClass();
         $chat->is_group = true;
         $chat->name = self::DEFAULT_GROUP_NAME;
-        $chat->conversation_id = $conversation_id;
-        $chat->messages = $query->fetchAll();
+        $chat->conversation_id = $conversation->conversation_id;
+        $chat->messages = $messages;
 
         return $chat;
     }
@@ -122,23 +78,10 @@ class ChatModel
     {
         $database = DatabaseFactory::getFactory()->getConnection();
 
-        $sql = "SELECT COUNT(m.ID) AS unread_messages
-                FROM messages m
-                INNER JOIN conversations c ON c.ID = m.conversation_id
-                INNER JOIN conversation_members cm1 ON cm1.conversation_id = c.ID
-                INNER JOIN conversation_members cm2 ON cm2.conversation_id = c.ID
-                WHERE c.type = 0
-                    AND cm1.user_id = :member_user_id
-                    AND cm2.user_id = :current_user_id
-                    AND m.sender_id = :sender_user_id
-                    AND m.is_read = 0";
-        $query = $database->prepare($sql);
-        $query->execute(array(
-            ':member_user_id' => $user_id,
-            ':current_user_id' => Session::get('user_id'),
-            ':sender_user_id' => $user_id
+        $result = self::fetchProcedure($database, "CALL chat_count_direct_unread(:user_id, :current_user_id)", array(
+            ':user_id' => $user_id,
+            ':current_user_id' => Session::get('user_id')
         ));
-        $result = $query->fetch();
 
         return $result->unread_messages;
     }
@@ -149,19 +92,10 @@ class ChatModel
     public static function getDefaultGroupUnreadMessagesCount()
     {
         $database = DatabaseFactory::getFactory()->getConnection();
-        $conversation_id = self::getDefaultGroupConversationId();
 
-        $sql = "SELECT COUNT(ID) AS unread_messages
-                FROM messages
-                WHERE conversation_id = :conversation_id
-                    AND sender_id != :current_user_id
-                    AND is_read = 0";
-        $query = $database->prepare($sql);
-        $query->execute(array(
-            ':conversation_id' => $conversation_id,
+        $result = self::fetchProcedure($database, "CALL chat_count_default_group_unread(:current_user_id)", array(
             ':current_user_id' => Session::get('user_id')
         ));
-        $result = $query->fetch();
 
         return $result->unread_messages;
     }
@@ -174,48 +108,9 @@ class ChatModel
     {   
         $database = DatabaseFactory::getFactory()->getConnection();
 
-        $sql = "SELECT cm.conversation_id FROM conversation_members cm
-                INNER JOIN conversations c ON c.ID = cm.conversation_id
-                WHERE cm.user_id IN (:user_id, :current_user_id)
-                    AND c.type = 0
-                GROUP BY cm.conversation_id
-                HAVING COUNT(*) = 2
-                LIMIT 1";
-        $query = $database->prepare($sql);
-        $query->execute(array(
+        self::executeProcedure($database, "CALL chat_save_direct_message(:current_user_id, :user_id, :message)", array(
+            ':current_user_id' => Session::get('user_id'),
             ':user_id' => $user_id,
-            ':current_user_id' => Session::get('user_id')
-        ));
-        $conversation = $query->fetch();
-
-        if (!$conversation) {
-            $sql = "INSERT INTO conversations (type) VALUES (0)";
-            $query = $database->prepare($sql);
-            $query->execute();
-
-            $conversation_id = $database->lastInsertId();
-
-            $sql = "INSERT INTO conversation_members (conversation_id, user_id)
-                    VALUES (:conversation_id_1, :user_id_1),
-                           (:conversation_id_2, :user_id_2)";
-            $query = $database->prepare($sql);
-            $query->execute(array(
-                ':conversation_id_1' => $conversation_id,
-                ':user_id_1' => Session::get('user_id'),
-                ':conversation_id_2' => $conversation_id,
-                ':user_id_2' => $user_id
-            ));
-        } else {
-            $conversation_id = $conversation->conversation_id;
-        }
-
-        $sql = "INSERT INTO messages (conversation_id, sender_id, message)
-                VALUES (:conversation_id, :sender_id, :message)";
-        $query = $database->prepare($sql);
-
-        $query->execute(array(
-            ':conversation_id' => $conversation_id,
-            ':sender_id' => Session::get('user_id'),
             ':message' => $message
         ));
     }
@@ -230,14 +125,8 @@ class ChatModel
         }
 
         $database = DatabaseFactory::getFactory()->getConnection();
-        $conversation_id = self::getDefaultGroupConversationId();
-
-        $sql = "INSERT INTO messages (conversation_id, sender_id, message)
-                VALUES (:conversation_id, :sender_id, :message)";
-        $query = $database->prepare($sql);
-        $query->execute(array(
-            ':conversation_id' => $conversation_id,
-            ':sender_id' => Session::get('user_id'),
+        self::executeProcedure($database, "CALL chat_save_default_group_message(:current_user_id, :message)", array(
+            ':current_user_id' => Session::get('user_id'),
             ':message' => $message
         ));
     }
@@ -248,53 +137,55 @@ class ChatModel
     public static function addUserToDefaultGroup($user_id)
     {
         $database = DatabaseFactory::getFactory()->getConnection();
-        $conversation_id = self::getDefaultGroupConversationId();
-
-        $sql = "INSERT IGNORE INTO conversation_members (conversation_id, user_id)
-                VALUES (:conversation_id, :user_id)";
-        $query = $database->prepare($sql);
-        $query->execute(array(
-            ':conversation_id' => $conversation_id,
+        self::executeProcedure($database, "CALL chat_add_user_to_default_group(:user_id)", array(
             ':user_id' => $user_id
         ));
     }
 
     /**
-     * @return int The default group conversation id
+     * @param PDO $database
+     * @param string $sql
+     * @param array $parameters
+     * @return bool
      */
-    private static function getDefaultGroupConversationId()
+    private static function executeProcedure($database, $sql, $parameters = array())
     {
-        $database = DatabaseFactory::getFactory()->getConnection();
-
-        $sql = "SELECT ID FROM conversations WHERE type = 1 ORDER BY ID ASC LIMIT 1";
         $query = $database->prepare($sql);
-        $query->execute();
-        $conversation = $query->fetch();
+        $result = $query->execute($parameters);
+        $query->closeCursor();
 
-        if ($conversation) {
-            $conversation_id = $conversation->ID;
-        } else {
-            $sql = "INSERT INTO conversations (type) VALUES (1)";
-            $query = $database->prepare($sql);
-            $query->execute();
-            $conversation_id = $database->lastInsertId();
-        }
-
-        self::syncDefaultGroupMembers($conversation_id);
-
-        return $conversation_id;
+        return $result;
     }
 
     /**
-     * @param int $conversation_id The group conversation id
+     * @param PDO $database
+     * @param string $sql
+     * @param array $parameters
+     * @return object
      */
-    private static function syncDefaultGroupMembers($conversation_id)
+    private static function fetchProcedure($database, $sql, $parameters = array())
     {
-        $database = DatabaseFactory::getFactory()->getConnection();
-
-        $sql = "INSERT IGNORE INTO conversation_members (conversation_id, user_id)
-                SELECT :conversation_id, user_id FROM users";
         $query = $database->prepare($sql);
-        $query->execute(array(':conversation_id' => $conversation_id));
+        $query->execute($parameters);
+        $result = $query->fetch();
+        $query->closeCursor();
+
+        return $result;
+    }
+
+    /**
+     * @param PDO $database
+     * @param string $sql
+     * @param array $parameters
+     * @return array
+     */
+    private static function fetchAllProcedure($database, $sql, $parameters = array())
+    {
+        $query = $database->prepare($sql);
+        $query->execute($parameters);
+        $result = $query->fetchAll();
+        $query->closeCursor();
+
+        return $result;
     }
 }
