@@ -1,5 +1,9 @@
 # this is just a demo .gitignore file, put all the files and folders you want to be ignored by git inside
+# don't commit macOS Finder metadata
+.DS_Store
 # if you work with NetBeans: ignore NetBeans project files
 /nbproject/private/
 # don't commit all the dependencies fetched via Composer
 /vendor/
+# don't commit uploaded gallery images
+/galleryimages/

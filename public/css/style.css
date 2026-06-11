@@ -73,6 +73,76 @@ body {
     color: #fff;
 }
 
+.gallery-upload {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+.gallery-file-label {
+    background-color: #f5f5f5;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+#gallery-picture {
+    display: none;
+}
+.gallery-file-name {
+    min-width: 150px;
+    padding: 5px 10px;
+    background: #f5f5f5;
+    color: #555;
+}
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 200px);
+    gap: 16px;
+}
+.gallery-item {
+    border: 1px solid #ddd;
+    padding: 10px;
+    background: #fff;
+    box-sizing: border-box;
+    width: 200px;
+}
+.gallery-image-box {
+    display: block;
+    width: 180px;
+    height: 135px;
+    overflow: hidden;
+    background: #f1f1f1;
+}
+.gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.gallery-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+    font-size: 12px;
+}
+.gallery-actions a {
+    display: block;
+    flex: 1;
+    padding: 6px 8px;
+    background: #eee;
+    color: #454545;
+    text-align: center;
+    text-decoration: none;
+}
+.gallery-actions a:hover {
+    background: #222;
+    color: #fff;
+}
+@media (max-width: 700px) {
+    .gallery-grid {
+        grid-template-columns: repeat(2, 200px);
+    }
+}
+
 
 
 /* navigation dropdown menu */
