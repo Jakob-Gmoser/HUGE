@@ -139,6 +139,12 @@ class TaskModel
         }
 
         $tester_user_id = (int) $tester_user_id > 0 ? (int) $tester_user_id : null;
+        $old_task = self::getTask($task_id);
+
+        if (!$old_task) {
+            Session::add('feedback_negative', 'Task could not be updated.');
+            return false;
+        }
 
         $database = DatabaseFactory::getFactory()->getConnection();
 
@@ -161,6 +167,7 @@ class TaskModel
         ));
 
         if (self::getTask($task_id)) {
+            self::createChangeHistory($old_task, (int) $task_status_id, $assigned_user_id, $tester_user_id);
             return true;
         }
 
@@ -191,5 +198,139 @@ class TaskModel
 
         Session::add('feedback_negative', 'Task could not be deleted.');
         return false;
+    }
+
+    /**
+     * Get all comments for a task. Comments are available for logged-in users via the controller.
+     * @param int $task_id
+     * @return array
+     */
+    public static function getCommentsForTask($task_id)
+    {
+        $database = DatabaseFactory::getFactory()->getConnection();
+
+        $sql = "SELECT c.task_comment_id, c.task_id, c.user_id, u.user_name, c.comment_text, c.created_at
+                  FROM task_comments c
+            INNER JOIN users u ON c.user_id = u.user_id
+                 WHERE c.task_id = :task_id
+              ORDER BY c.created_at ASC, c.task_comment_id ASC";
+        $query = $database->prepare($sql);
+        $query->execute(array(':task_id' => (int) $task_id));
+
+        return $query->fetchAll();
+    }
+
+    /**
+     * Create a comment for a task.
+     * @param int $task_id
+     * @param string $comment_text
+     * @return bool
+     */
+    public static function createComment($task_id, $comment_text)
+    {
+        $task_id = (int) $task_id;
+        $comment_text = trim((string) $comment_text);
+        $user_id = (int) Session::get('user_id');
+
+        if (!$task_id || !$comment_text || !$user_id) {
+            Session::add('feedback_negative', 'Comment could not be created.');
+            return false;
+        }
+
+        $database = DatabaseFactory::getFactory()->getConnection();
+
+        $sql = "INSERT INTO task_comments (task_id, user_id, comment_text)
+                VALUES (:task_id, :user_id, :comment_text)";
+        $query = $database->prepare($sql);
+        $query->execute(array(
+            ':task_id' => $task_id,
+            ':user_id' => $user_id,
+            ':comment_text' => $comment_text
+        ));
+
+        if ($query->rowCount() === 1) {
+            return true;
+        }
+
+        Session::add('feedback_negative', 'Comment could not be created.');
+        return false;
+    }
+
+    /**
+     * Get change history for a task. Non-admin users receive no history data.
+     * @param int $task_id
+     * @return array
+     */
+    public static function getChangeHistoryForTask($task_id)
+    {
+        if ((int) Session::get('user_account_type') !== 7) {
+            return array();
+        }
+
+        $database = DatabaseFactory::getFactory()->getConnection();
+
+        $sql = "SELECT h.task_change_id, h.task_id, h.changed_field, h.old_value, h.new_value,
+                       h.changed_by_user_id, u.user_name AS changed_by_user_name, h.changed_at
+                  FROM task_change_history h
+            INNER JOIN users u ON h.changed_by_user_id = u.user_id
+                 WHERE h.task_id = :task_id
+              ORDER BY h.changed_at DESC, h.task_change_id DESC";
+        $query = $database->prepare($sql);
+        $query->execute(array(':task_id' => (int) $task_id));
+
+        return $query->fetchAll();
+    }
+
+    private static function createChangeHistory($old_task, $new_status_id, $new_assigned_user_id, $new_tester_user_id)
+    {
+        $changed_by_user_id = (int) Session::get('user_id');
+
+        if (!$changed_by_user_id) {
+            return;
+        }
+
+        self::createHistoryEntryIfChanged(
+            $old_task->task_id,
+            'task_status_id',
+            $old_task->task_status_id,
+            $new_status_id,
+            $changed_by_user_id
+        );
+
+        self::createHistoryEntryIfChanged(
+            $old_task->task_id,
+            'assigned_user_id',
+            $old_task->assigned_user_id,
+            $new_assigned_user_id,
+            $changed_by_user_id
+        );
+
+        self::createHistoryEntryIfChanged(
+            $old_task->task_id,
+            'tester_user_id',
+            $old_task->tester_user_id,
+            $new_tester_user_id,
+            $changed_by_user_id
+        );
+    }
+
+    private static function createHistoryEntryIfChanged($task_id, $changed_field, $old_value, $new_value, $changed_by_user_id)
+    {
+        if ((string) $old_value === (string) $new_value) {
+            return;
+        }
+
+        $database = DatabaseFactory::getFactory()->getConnection();
+
+        $sql = "INSERT INTO task_change_history (task_id, changed_field, old_value, new_value, changed_by_user_id)
+                VALUES (:task_id, :changed_field, :old_value, :new_value, :changed_by_user_id)";
+        $query = $database->prepare($sql);
+        $query->execute(array(
+            ':task_id' => (int) $task_id,
+            ':changed_field' => $changed_field,
+            ':old_value' => $old_value === null ? null : (string) $old_value,
+            ':new_value' => $new_value === null ? null : (string) $new_value,
+            ':changed_by_user_id' => (int) $changed_by_user_id
+        ));
     }
 }

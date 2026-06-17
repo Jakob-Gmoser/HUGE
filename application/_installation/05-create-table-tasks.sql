@@ -32,3 +32,31 @@ INSERT IGNORE INTO `huge`.`tasks` (`task_id`, `task_title`, `task_description`, 
   (2, 'Backend vorbereiten', 'Datenbank ist fuer die spaetere Backend-Anbindung vorbereitet.', 2, 1, NULL),
   (3, 'Testdaten pruefen', 'Pruefen, ob Aufgaben mit Status und Benutzerzuweisung gespeichert werden koennen.', 1, 2, NULL),
   (4, 'Testing vorbereiten', 'Aufgabe ist bereit zum Testen und einem Tester zugewiesen.', 4, 1, 2);
+
+CREATE TABLE IF NOT EXISTS `huge`.`task_comments` (
+ `task_comment_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+ `task_id` int(11) unsigned NOT NULL,
+ `user_id` int(11) NOT NULL,
+ `comment_text` text COLLATE utf8_unicode_ci NOT NULL,
+ `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ PRIMARY KEY (`task_comment_id`),
+ KEY `task_id` (`task_id`),
+ KEY `user_id` (`user_id`),
+ CONSTRAINT `task_comments_task_fk` FOREIGN KEY (`task_id`) REFERENCES `huge`.`tasks` (`task_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+ CONSTRAINT `task_comments_user_fk` FOREIGN KEY (`user_id`) REFERENCES `huge`.`users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='comments for tasks';
+
+CREATE TABLE IF NOT EXISTS `huge`.`task_change_history` (
+ `task_change_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+ `task_id` int(11) unsigned NOT NULL,
+ `changed_field` varchar(50) COLLATE utf8_unicode_ci NOT NULL,
+ `old_value` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+ `new_value` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+ `changed_by_user_id` int(11) NOT NULL,
+ `changed_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ PRIMARY KEY (`task_change_id`),
+ KEY `task_id` (`task_id`),
+ KEY `changed_by_user_id` (`changed_by_user_id`),
+ CONSTRAINT `task_change_history_task_fk` FOREIGN KEY (`task_id`) REFERENCES `huge`.`tasks` (`task_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+ CONSTRAINT `task_change_history_user_fk` FOREIGN KEY (`changed_by_user_id`) REFERENCES `huge`.`users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='status and user assignment changes for tasks';
