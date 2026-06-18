@@ -30,6 +30,32 @@ class TaskModel
     }
 
     /**
+     * Get all tasks assigned to a user or marked for testing by this user.
+     * @param int $user_id id of the user
+     * @return array
+     */
+    public static function getTasksForUser($user_id)
+    {
+        $database = DatabaseFactory::getFactory()->getConnection();
+
+        $sql = "SELECT t.task_id, t.task_title, t.task_description, t.task_status_id,
+                       s.task_status_text,
+                       t.assigned_user_id, assigned.user_name AS assigned_user_name,
+                       t.tester_user_id, tester.user_name AS tester_user_name
+                  FROM tasks t
+            INNER JOIN task_statuses s ON t.task_status_id = s.task_status_id
+             LEFT JOIN users assigned ON t.assigned_user_id = assigned.user_id
+             LEFT JOIN users tester ON t.tester_user_id = tester.user_id
+                 WHERE t.assigned_user_id = :user_id
+                    OR t.tester_user_id = :user_id
+              ORDER BY t.task_id ASC";
+        $query = $database->prepare($sql);
+        $query->execute(array(':user_id' => (int) $user_id));
+
+        return $query->fetchAll();
+    }
+
+    /**
      * Get a single task.
      * @param int $task_id id of the task
      * @return object|bool
