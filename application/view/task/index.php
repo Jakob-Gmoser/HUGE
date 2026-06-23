@@ -23,9 +23,9 @@
             </div>
         </div>
 
-        <div class="task-board">
+        <div class="task-board" data-update-status-url="<?php echo Config::get('URL'); ?>task/updateStatus">
             <?php foreach ($this->task_statuses as $status) { ?>
-                <div class="task-column">
+                <div class="task-column" data-status-id="<?= (int) $status->task_status_id; ?>">
                     <div class="task-column-header">
                         <h2><?= $this->encodeHTML($status->task_status_text); ?></h2>
                         <span><?= count($tasks_by_status[$status->task_status_id]); ?></span>
@@ -33,7 +33,7 @@
 
                     <?php if (!empty($tasks_by_status[$status->task_status_id])) { ?>
                         <?php foreach ($tasks_by_status[$status->task_status_id] as $task) { ?>
-                            <div class="task-card">
+                            <div class="task-card" data-task-id="<?= (int) $task->task_id; ?>" draggable="true">
                                 <a class="task-card-link" href="#task-<?= (int) $task->task_id; ?>">
                                     <span class="task-card-status"><?= $this->encodeHTML($task->task_status_text); ?></span>
 
@@ -54,3 +54,5 @@
         <?php require Config::get('PATH_VIEW') . 'task/createForm.php'; ?>
     </div>
 </div>
+
+<script src="<?php echo Config::get('URL'); ?>js/task.js"></script>
