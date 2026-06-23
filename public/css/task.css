@@ -258,6 +258,37 @@
     color: #555;
     font-weight: bold;
 }
+.task-history {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #eceff2;
+}
+.task-history h3 {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    color: #222;
+}
+.task-history p {
+    margin: 0;
+    color: #777;
+}
+.task-history ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.task-history li {
+    padding: 8px 0;
+    border-bottom: 1px solid #eceff2;
+    color: #333;
+    font-size: 13px;
+}
+.task-history li span {
+    display: block;
+    margin-top: 3px;
+    color: #777;
+    font-size: 12px;
+}
 .task-delete-link,
 .task-delete-link:link,
 .task-delete-link:visited {

@@ -6,9 +6,16 @@
 
         <?php
         $tasks_by_status = array();
+        $task_status_names = array();
+        $user_names = array();
 
         foreach ($this->task_statuses as $status) {
             $tasks_by_status[$status->task_status_id] = array();
+            $task_status_names[$status->task_status_id] = $status->task_status_text;
+        }
+
+        foreach ($this->users as $user) {
+            $user_names[$user->user_id] = $user->user_name;
         }
 
         foreach ($this->tasks as $task) {

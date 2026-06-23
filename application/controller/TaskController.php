@@ -22,8 +22,16 @@ class TaskController extends Controller
      */
     public function index()
     {
+        $tasks = $this->getVisibleTasks();
+
+        if ($this->is_admin) {
+            foreach ($tasks as $task) {
+                $task->change_history = TaskModel::getChangeHistoryForTask($task->task_id);
+            }
+        }
+
         $this->View->render('task/index', array(
-            'tasks' => $this->getVisibleTasks(),
+            'tasks' => $tasks,
             'task_statuses' => TaskModel::getAllTaskStatuses(),
             'users' => UserModel::getPublicProfilesOfAllUsers(),
             'is_admin' => $this->is_admin

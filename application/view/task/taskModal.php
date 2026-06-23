@@ -27,6 +27,11 @@
         $is_assigned_user = (int) $task->assigned_user_id === (int) Session::get('user_id');
         $is_tester_user = (int) $task->tester_user_id === (int) Session::get('user_id');
         $can_update_status = $is_assigned_user || $is_tester_user;
+        $history_field_names = array(
+            'task_status_id' => 'Status',
+            'assigned_user_id' => 'Zuweisung',
+            'tester_user_id' => 'Tester'
+        );
         ?>
 
         <?php if ($this->is_admin) { ?>
@@ -84,6 +89,46 @@
                     <a class="task-delete-link" href="<?= Config::get('URL'); ?>task/delete/<?= (int) $task->task_id; ?>">Löschen</a>
                 </div>
             </form>
+
+            <div class="task-history">
+                <h3>Änderungsverlauf</h3>
+
+                <?php if (empty($task->change_history)) { ?>
+                    <p>Noch keine Änderungen vorhanden.</p>
+                <?php } else { ?>
+                    <ul>
+                        <?php foreach ($task->change_history as $history_entry) { ?>
+                            <?php
+                            $field_name = isset($history_field_names[$history_entry->changed_field]) ? $history_field_names[$history_entry->changed_field] : $history_entry->changed_field;
+                            $old_value = $history_entry->old_value;
+                            $new_value = $history_entry->new_value;
+
+                            if ($history_entry->changed_field === 'task_status_id') {
+                                $old_value = isset($task_status_names[$history_entry->old_value]) ? $task_status_names[$history_entry->old_value] : $old_value;
+                                $new_value = isset($task_status_names[$history_entry->new_value]) ? $task_status_names[$history_entry->new_value] : $new_value;
+                            }
+
+                            if ($history_entry->changed_field === 'assigned_user_id' || $history_entry->changed_field === 'tester_user_id') {
+                                $old_value = isset($user_names[$history_entry->old_value]) ? $user_names[$history_entry->old_value] : $old_value;
+                                $new_value = isset($user_names[$history_entry->new_value]) ? $user_names[$history_entry->new_value] : $new_value;
+                            }
+
+                            $old_value = $old_value ? $old_value : '-';
+                            $new_value = $new_value ? $new_value : '-';
+                            ?>
+
+                            <li>
+                                <strong><?= $this->encodeHTML($field_name); ?>:</strong>
+                                <?= $this->encodeHTML($old_value); ?> &rarr; <?= $this->encodeHTML($new_value); ?>
+                                <span>
+                                    <?= $this->encodeHTML($history_entry->changed_by_user_name); ?>,
+                                    <?= date('d.m.Y H:i', strtotime($history_entry->changed_at)); ?>
+                                </span>
+                            </li>
+                        <?php } ?>
+                    </ul>
+                <?php } ?>
+            </div>
         <?php } else if ($can_update_status) { ?>
             <form class="task-form" method="post" action="<?= Config::get('URL'); ?>task/updateStatus">
                 <input type="hidden" name="task_id" value="<?= (int) $task->task_id; ?>">
