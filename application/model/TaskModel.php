@@ -94,7 +94,7 @@ class TaskModel
 
         $sql = "SELECT task_status_id, task_status_text
                   FROM task_statuses
-              ORDER BY task_status_id ASC";
+              ORDER BY FIELD(task_status_id, 1, 2, 4, 3)";
         $query = $database->prepare($sql);
         $query->execute();
 
