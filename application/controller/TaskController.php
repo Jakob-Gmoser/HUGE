@@ -254,7 +254,12 @@ class TaskController extends Controller
      */
     private function getTesterUserIdForStatusUpdate($task)
     {
+        $user_id = (int) Session::get('user_id');
         $task_status_id = Request::post('task_status_id') ?: $task->task_status_id;
+
+        if (!$this->is_admin && (int) $task->tester_user_id === $user_id) {
+            return null;
+        }
 
         if ((int) $task_status_id === self::TESTING_STATUS_ID && Request::post('tester_user_id')) {
             return Request::post('tester_user_id');

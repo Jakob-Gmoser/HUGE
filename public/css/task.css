@@ -13,6 +13,21 @@
     margin: 4px 0 0 0;
     color: #777;
 }
+.task-create-form {
+    display: grid;
+    gap: 10px;
+    margin: 22px 0 0 0;
+    padding: 14px;
+    border: 1px solid #d7dce2;
+    border-top: 4px solid #2f6f9f;
+    background: #f8fafc;
+    box-sizing: border-box;
+}
+.task-create-form h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #222;
+}
 .task-board {
     display: grid;
     grid-template-columns: repeat(4, minmax(205px, 1fr));
@@ -174,30 +189,75 @@
 }
 .task-form {
     display: grid;
-    gap: 8px;
+    gap: 10px;
     padding-top: 10px;
     border-top: 1px solid #eceff2;
+}
+.task-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
 }
 .task-form-row {
     display: grid;
     gap: 4px;
 }
-.task-form label {
+.task-form label,
+.task-create-form label {
     font-size: 12px;
     font-weight: bold;
     color: #555;
 }
-.task-form select {
+.task-form input[type="text"],
+.task-form select,
+.task-form textarea,
+.task-create-form input[type="text"],
+.task-create-form select,
+.task-create-form textarea {
     width: 100%;
     background-color: #f5f5f5;
     border: 1px solid #d7dce2;
     padding: 6px 8px;
     box-sizing: border-box;
 }
-.task-form input[type="submit"] {
+.task-form textarea,
+.task-create-form textarea {
+    resize: vertical;
+    min-height: 72px;
+}
+.task-form-actions {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: center;
+}
+.task-form input[type="submit"],
+.task-create-form input[type="submit"] {
     width: 100%;
     margin-top: 2px;
     font-weight: bold;
+}
+.task-readonly-note {
+    padding: 10px;
+    background: #f5f5f5;
+    border: 1px solid #d7dce2;
+    color: #555;
+    font-weight: bold;
+}
+.task-delete-link,
+.task-delete-link:link,
+.task-delete-link:visited {
+    display: inline-block;
+    padding: 7px 10px;
+    background: #9f3030;
+    color: #fff;
+    text-decoration: none;
+    font-weight: bold;
+}
+.task-delete-link:hover,
+.task-delete-link:focus {
+    background: #772020;
+    color: #fff;
 }
 .task-empty {
     color: #777;
@@ -210,6 +270,10 @@
 
 @media (max-width: 700px) {
     .task-board {
+        grid-template-columns: 1fr;
+    }
+    .task-form-grid,
+    .task-form-actions {
         grid-template-columns: 1fr;
     }
 }

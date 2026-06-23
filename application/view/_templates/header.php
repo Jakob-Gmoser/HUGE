@@ -13,7 +13,7 @@
         <link rel="stylesheet" href="<?php echo Config::get('URL'); ?>css/chat.css?v=3" />
     <?php } ?>
     <?php if (View::checkForActiveController($filename, "task")) { ?>
-        <link rel="stylesheet" href="<?php echo Config::get('URL'); ?>css/task.css?v=1" />
+        <link rel="stylesheet" href="<?php echo Config::get('URL'); ?>css/task.css" />
     <?php } ?>
 </head>
 <body>

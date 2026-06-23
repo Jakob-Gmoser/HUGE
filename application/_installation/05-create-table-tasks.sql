@@ -29,8 +29,8 @@ CREATE TABLE IF NOT EXISTS `huge`.`tasks` (
 
 INSERT IGNORE INTO `huge`.`tasks` (`task_id`, `task_title`, `task_description`, `task_status_id`, `assigned_user_id`, `tester_user_id`) VALUES
   (1, 'Datenbankstruktur anlegen', 'Aufgabentabelle mit Titel, Beschreibung, Status und Benutzerzuweisung erstellen.', 3, 1, NULL),
-  (2, 'Backend vorbereiten', 'Datenbank ist fuer die spaetere Backend-Anbindung vorbereitet.', 2, 1, NULL),
-  (3, 'Testdaten pruefen', 'Pruefen, ob Aufgaben mit Status und Benutzerzuweisung gespeichert werden koennen.', 1, 2, NULL),
+  (2, 'Backend vorbereiten', 'Datenbank ist für die spätere Backend-Anbindung vorbereitet.', 2, 1, NULL),
+  (3, 'Testdaten prüfen', 'Prüfen, ob Aufgaben mit Status und Benutzerzuweisung gespeichert werden können.', 1, 2, NULL),
   (4, 'Testing vorbereiten', 'Aufgabe ist bereit zum Testen und einem Tester zugewiesen.', 4, 1, 2);
 
 CREATE TABLE IF NOT EXISTS `huge`.`task_comments` (
