@@ -165,5 +165,31 @@
         <?php } else { ?>
             <p class="task-readonly-note">Du kannst diesen Task nur ansehen.</p>
         <?php } ?>
+
+        <div class="task-comments">
+            <h3>Kommentare</h3>
+
+            <?php if (empty($task->comments)) { ?>
+                <p>Noch keine Kommentare vorhanden.</p>
+            <?php } else { ?>
+                <ul>
+                    <?php foreach ($task->comments as $comment) { ?>
+                        <li>
+                            <div class="task-comment-meta">
+                                <strong><?= $this->encodeHTML($comment->user_name); ?></strong>
+                                <span><?= date('d.m.Y H:i', strtotime($comment->created_at)); ?></span>
+                            </div>
+                            <div class="task-comment-text"><?= nl2br($this->encodeHTML($comment->comment_text)); ?></div>
+                        </li>
+                    <?php } ?>
+                </ul>
+            <?php } ?>
+
+            <form class="task-comment-form" method="post" action="<?= Config::get('URL'); ?>task/addComment">
+                <input type="hidden" name="task_id" value="<?= (int) $task->task_id; ?>">
+                <textarea name="comment_text" rows="3" placeholder="Kommentar schreiben ..." required></textarea>
+                <input type="submit" value="Kommentar hinzufügen" autocomplete="off">
+            </form>
+        </div>
     </div>
 </div>

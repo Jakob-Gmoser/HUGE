@@ -24,8 +24,10 @@ class TaskController extends Controller
     {
         $tasks = $this->getVisibleTasks();
 
-        if ($this->is_admin) {
-            foreach ($tasks as $task) {
+        foreach ($tasks as $task) {
+            $task->comments = TaskModel::getCommentsForTask($task->task_id);
+
+            if ($this->is_admin) {
                 $task->change_history = TaskModel::getChangeHistoryForTask($task->task_id);
             }
         }
@@ -159,7 +161,8 @@ class TaskController extends Controller
             );
         }
 
-        Redirect::to('task/show/' . $task_id);
+        Redirect::to('task#task-' . (int) $task_id);
+        exit();
     }
 
     /**
