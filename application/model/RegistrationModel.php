@@ -15,6 +15,16 @@ class RegistrationModel
      */
     public static function registerNewUser()
     {
+        $recaptcha = json_decode(@file_get_contents(
+            'https://www.google.com/recaptcha/api/siteverify?secret=' . urlencode(Config::get('RECAPTCHA_SECRET_KEY')) .
+            '&response=' . urlencode(Request::post('g-recaptcha-response'))
+        ));
+
+        if (empty($recaptcha->success) || empty($recaptcha->action) || $recaptcha->action !== 'register' || !isset($recaptcha->score) || $recaptcha->score < 0.5) {
+            Session::add('feedback_negative', Text::get('FEEDBACK_RECAPTCHA_WRONG'));
+            return false;
+        }
+
         // clean the input
         $user_name = strip_tags(Request::post('user_name'));
         $user_email = strip_tags(Request::post('user_email'));
